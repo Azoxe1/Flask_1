@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-
+from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy import create_engine, String, DateTime, func, ForeignKey
 from sqlalchemy.orm import sessionmaker, DeclarativeBase, Mapped, mapped_column
 
@@ -20,19 +20,22 @@ class Base(DeclarativeBase):
     pass
 
 
-# class Owners(Base):
-#     __tablename__ = 'Owners'
-#
-#     id: Mapped[int] = mapped_column(primary_key=True)
-#     email: Mapped[str] = mapped_column(String(100), nullable=False)
-#     password: Mapped[int] = mapped_column(primary_key=True)
-#
-#     def dict(self):
-#         return {
-#             'id': self.id,
-#             'name': self.email,
-#             'password': self.password,
-#         }
+class Owners(Base):
+    __tablename__ = 'app_Owners'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(String(100), nullable=False)
+    password: Mapped[int] = mapped_column(String(100), nullable=False)
+    ads = relationship('ADS', backref='owners')
+
+    @property
+    def dict(self):
+        return {
+            'id': self.id,
+            'email': self.email,
+            'password': self.password,
+            'ads': self.ads,
+        }
 
 
 class ADS(Base):
@@ -41,9 +44,8 @@ class ADS(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str] = mapped_column(String(1000), nullable=False)
-    # date_of_creation: Mapped[datetime:datetime] = mapped_column(DateTime)
-    # owner: Mapped[str] = mapped_column(ForeignKey(Owners.id))
-    owner: Mapped[str] = mapped_column(String(100), nullable=False)
+    date_of_creation: Mapped[datetime:datetime] = mapped_column(DateTime, server_default=func.now())
+    owner: Mapped[int] = mapped_column(ForeignKey(Owners.id))
 
     @property
     def dict(self):
@@ -51,7 +53,7 @@ class ADS(Base):
             'id': self.id,
             'title': self.title,
             'description': self.description,
-            # 'date_of_creation': self.date_of_creation.isoformat,
+            'date_of_creation': self.date_of_creation,
             'owner': self.owner
         }
 

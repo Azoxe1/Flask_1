@@ -1,11 +1,10 @@
 from sqlite3 import IntegrityError
-
-import flask
 from flask import request
-import request
+import flask
+
 import json
 from flask import views, jsonify
-from models import Session, ADS
+from models import Session, ADS, Owners
 
 app = flask.Flask("app")
 
@@ -35,11 +34,19 @@ def error_handler(error):
     return response
 
 
-def get_ads(ads_id: int):
-    ads = request.session.get(ADS, ads_id)
+def get_smth(model, smth_id: int):
+    ads = request.session.get(model, smth_id)
     if ads is None:
-        raise HttpError(404, 'ADS not found')
+        raise HttpError(404, 'Not found')
     return ads
+
+
+def add_smth(smth: ADS):
+    try:
+        request.session.add(smth)
+        request.session.commit()
+    except IntegrityError as err:
+        raise HttpError(409, "Already exists")
 
 
 class ADSView(views.MethodView):
@@ -47,42 +54,53 @@ class ADSView(views.MethodView):
     def session(self) -> Session:
         return request.session
 
-    def get(self, ads_id: int):
-        ads = get_ads(ads_id)
-        return jsonify(ads.dict)
+    def __init__(self):
+        self.model = ADS
+
+    def get(self, smth_id: int):
+        values = get_smth(self.model, smth_id)
+        if self.model is ADS:
+            return jsonify(values.dict)
+        return str(values.dict)
 
     def post(self):
-        ads_data = request.json()
-        ads = ADS(**ads_data)
-        try:
-            request.session.add(ads)
-            request.session.commit()
-        except IntegrityError as err:
-            raise HttpError(409, "ADS already exist")
-        return jsonify({'id': ads.id})
+        values_data = request.json
+        values = self.model(**values_data)
+        add_smth(values)
+        return jsonify({'id': values.id})
 
-    def patch(self, ADS_id: int):
-        ads = get_ads(ADS_id)
-        ads_data = request.json
-        for key, value in ads_data.items():
-            setattr(ads, key, value)
-            try:
-                request.session.add(ads)
-                request.sessiom.commit()
-            except IntegrityError as err:
-                raise HttpError(409, "ADS already exist")
-        return jsonify({'id': ads.id})
+    def patch(self, smth_id: int):
+        values = get_smth(self.model, smth_id)
+        values_data = request.json
+        for key, value in values_data.items:
+            setattr(values, key, value)
+            add_smth(values)
+        return jsonify({'id': values})
 
-    def delete(self, ADS_id: int):
-        ads = get_ads(ADS_id)
-        self.session.delete(ads)
+    def delete(self, smth_id: int):
+        value = get_smth(self.model, smth_id)
+        self.session.delete(value)
         self.session.commit()
         return jsonify({'status': 'ok'})
 
 
-adswiev = ADSView.as_view('adswiev')
-app.add_url_rule("/ads/<int:ads_id>", view_func=adswiev, methods=['GET', 'PATCH', 'DELETE'])
-app.add_url_rule("/ads", view_func=adswiev, methods=['POST'])
+adview = ADSView.as_view('adview')
+app.add_url_rule("/ads/<int:smth_id>", view_func=adview, methods=['GET', 'PATCH', 'DELETE'])
+app.add_url_rule("/ads", view_func=adview, methods=['POST'])
+
+
+class OwnerView(ADSView):
+    @property
+    def session(self) -> Session:
+        return request.session
+
+    def __init__(self):
+        self.model = Owners
+
+
+owners = OwnerView.as_view('owners')
+app.add_url_rule("/owners/<int:smth_id>", view_func=owners, methods=['GET', 'PATCH', 'DELETE'])
+app.add_url_rule("/owners", view_func=owners, methods=['POST'])
 
 if __name__ == '__main__':
     app.run(debug=True, )
