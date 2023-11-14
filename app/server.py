@@ -59,9 +59,7 @@ class ADSView(views.MethodView):
 
     def get(self, smth_id: int):
         values = get_smth(self.model, smth_id)
-        if self.model is ADS:
-            return jsonify(values.dict)
-        return str(values.dict)
+        return jsonify(values.dict)
 
     def post(self):
         values_data = request.json

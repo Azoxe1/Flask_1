@@ -12,12 +12,12 @@ import requests
 # print(type(response))
 # print(response.text)
 
-
+#
 # response = requests.post("http://127.0.0.1:5000/ads",
-#                          json={"title": "ads",
-#                                "description": "qweqwe",
+#                          json={"title": "adssaa",
+#                                "description": "qweqweas",
 #                                "date_of_creation": (datetime.now()).isoformat(),
-#                                "owner": "2"
+#                                "owner_id": "1",
 #                                },
 #                          )
 #
@@ -25,16 +25,16 @@ import requests
 # print(response.text)
 
 response = requests.get(
-    "http://127.0.0.1:5000/owners/2",
+    "http://127.0.0.1:5000/owners/1",
 )
 print(response.status_code)
 print(response.text)
 
-response = requests.get(
-    "http://127.0.0.1:5000/ads/2",
-)
-print(response.status_code)
-print(response.text)
+# response = requests.get(
+#     "http://127.0.0.1:5000/ads/2",
+# )
+# print(response.status_code)
+# print(response.text)
 
 # response = requests.delete(
 #     "http://127.0.0.1:5000/ads/2",

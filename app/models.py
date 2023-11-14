@@ -1,5 +1,7 @@
 import os
 from datetime import datetime
+from typing import List
+
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy import create_engine, String, DateTime, func, ForeignKey
 from sqlalchemy.orm import sessionmaker, DeclarativeBase, Mapped, mapped_column
@@ -26,15 +28,14 @@ class Owners(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(100), nullable=False)
     password: Mapped[int] = mapped_column(String(100), nullable=False)
-    ads = relationship('ADS', backref='owners')
+    ads: Mapped[List["ADS"]] = relationship(back_populates='owner')
 
     @property
     def dict(self):
-        return {
-            'id': self.id,
-            'email': self.email,
-            'password': self.password,
-            'ads': self.ads,
+        return {"id": self.id,
+                "email": self.email,
+                "password": self.password,
+                "ads": [ad.dict for ad in self.ads]
         }
 
 
@@ -45,7 +46,8 @@ class ADS(Base):
     title: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str] = mapped_column(String(1000), nullable=False)
     date_of_creation: Mapped[datetime:datetime] = mapped_column(DateTime, server_default=func.now())
-    owner: Mapped[int] = mapped_column(ForeignKey(Owners.id))
+    owner_id: Mapped[int] = mapped_column(ForeignKey("app_Owners.id"))
+    owner: Mapped["Owners"] = relationship(back_populates='ads')
 
     @property
     def dict(self):
@@ -53,8 +55,8 @@ class ADS(Base):
             'id': self.id,
             'title': self.title,
             'description': self.description,
-            'date_of_creation': self.date_of_creation,
-            'owner': self.owner
+            'date_of_creation': self.date_of_creation.isoformat(),
+            'owner_id': self.owner_id
         }
 
 
